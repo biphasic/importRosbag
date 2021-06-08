@@ -39,7 +39,7 @@ def importTopic(msgs, **kwargs):
     xByMessage = []
     yByMessage = []
     polByMessage = []
-    for msg in tqdm(msgs, position=0, leave=True, disable=disable_bar):
+    for i, msg in enumerate(tqdm(msgs, position=0, leave=True, disable=disable_bar)):
         # TODO: maybe implement kwargs['useRosMsgTimestamps']
         data = msg['data']
         #seq = unpack('=L', data[0:4])[0]
@@ -63,7 +63,10 @@ def importTopic(msgs, **kwargs):
                dataAsArray[:, 9] * 2**8 + \
                dataAsArray[:, 10] * 2**16 + \
                dataAsArray[:, 11] * 2**24).astype(np.float64))
-        tsByMessage.append(ts + tns / 1000000000) # Combine timestamp parts, result is in seconds
+        if i == 0:
+            offset_seconds = ts[0]
+            offset_nanoseconds = tns[0]
+        tsByMessage.append(ts - offset_seconds + (tns - offset_nanoseconds) / 1000000000) # Combine timestamp parts, result is in seconds
         polByMessage.append(dataAsArray[:, 12].astype(np.bool))
     outDict = {
         'x': np.concatenate(xByMessage),
